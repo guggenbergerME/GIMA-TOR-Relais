@@ -21,6 +21,7 @@
  */
 
 #include <Ethernet.h>
+#include <PubSubClient.h> // mqtt
 #include "PCF8574.h" // Port Expander
 #include <SPI.h> // Seriell
 #include <Wire.h>
@@ -42,16 +43,22 @@ PCF8574 pcf8574(0x20);
 
 //************************************************************************** LAN Network definieren 
 byte mac[] = { 0xDE, 0xAD, 0xBE, 0xEF, 0x00, 0x01 };
-IPAddress ip(10, 110, 5, 1); //comment this line if you are using DHCP
-IPAddress server(10, 110, 0, 10); // mqtt Server
+IPAddress ip(10, 110, 1, 12); //comment this line if you are using DHCP
+IPAddress subnet(255, 255, 0, 0); // Subnet Mask
+
+IPAddress mqtt_server(10, 110, 255, 250);  // IP-Adresse des MQTT Brokers im lokalen Netzwerk
+
 EthernetClient ethClient;
+PubSubClient client(ethClient);
+
+//************************************************************************** mqtt Server
 
 
 //************************************************************************** Funktionsprototypen
 void loop                       ();
 void setup                      ();
-//void reconnect                  ();
-//void callback(char* topic, byte* payload, unsigned int length);
+void reconnect                  ();
+void callback(char* topic, byte* payload, unsigned int length);
 
 
 //************************************************************************** Intervalle
@@ -66,6 +73,8 @@ unsigned long interval_BEISPIEL = 800;
 
 */
 
+
+//************************************************************************** SETUP
 void setup() {
   Serial.begin(115200);
 
@@ -73,6 +82,10 @@ void setup() {
   Ethernet.begin(mac, ip);
   // Pause Netzwerk Antwort
   delay(1500);  
+
+///////////////////////////////////////////////////////////////////////////  MQTT Broker init
+  client.setServer(mqtt_server, 1883);
+  client.setCallback(callback);
 
 /////////////////////////////////////////////////////////////////////////// Konfig Portexpander
   pcf8574.pinMode(P0, OUTPUT);
@@ -94,13 +107,44 @@ pcf8574.digitalWrite(P4, !LOW);
 pcf8574.digitalWrite(P5, !LOW);
 pcf8574.digitalWrite(P6, !LOW);
 pcf8574.digitalWrite(P7, !LOW);
-  
+
 }
 
+//************************************************************************** mqtt - reconnect
+void reconnect() {
+  while (!client.connected()) {
+    Serial.print("Verbindung zum MQTT-Server aufbauen...");
+    if (client.connect("arduinoClient", "hitesh", "RO9UZ7wANCXzmy")) {
+      Serial.println("verbunden");
+      client.subscribe("test/topic");
+    } else {
+      Serial.print("Fehler, rc=");
+      Serial.print(client.state());
+      Serial.println(" erneut versuchen in 5 Sekunden");
+      delay(5000);
+    }
+  }
+}
 
+//************************************************************************** mqtt - callback
+void callback(char* topic, byte* payload, unsigned int length) {
+  Serial.print("Nachricht angekommen [");
+  Serial.print(topic);
+  Serial.print("] ");
+  for (int i = 0; i < length; i++) {
+    Serial.print((char)payload[i]);
+  }
+  Serial.println();
+}
+
+//************************************************************************** LOOP
 void loop() {
 
+  if (!client.connected()) {
+    reconnect();
+  }
+  client.loop();
 
-
+delay(200);
 
 }
