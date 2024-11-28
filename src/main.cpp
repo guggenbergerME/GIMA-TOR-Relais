@@ -130,32 +130,36 @@ void reconnect() {
 //************************************************************************** mqtt - callback
 void callback(char* topic, byte* payload, unsigned int length) {
 
-  Serial.print("Nachricht angekommen [");
+ Serial.print("Nachricht empfangen [");
   Serial.print(topic);
-  Serial.print("] ");
+  Serial.print("]: ");
+  
+  // Payload in einen String umwandeln
+  String message;
   for (int i = 0; i < length; i++) {
-    Serial.print((char)payload[i]);
+    message += (char)payload[i];
   }
-  Serial.println();
-/*
-    if (strcmp(topic,"Werktor/K0")==0) {
+  
+  Serial.println(message);
 
-        // Kanal A
-        if ((char)payload[0] == 'o' && (char)payload[1] == 'n') {  
-                 Serial.println("Relais K0 -> AN");
-                 pcf8574.digitalWrite(P0, !HIGH);
-                 //client.publish("Werktor/K0","on");
-                delay(100);
-              }
-
-        if ((char)payload[0] == 'o' && (char)payload[1] == 'f' && (char)payload[2] == 'f') {  
-                 Serial.println("Relais K0 -> AUS");
-                 pcf8574.digitalWrite(P0, !LOW);
-                 //client.publish("Werktor/K0","off");
-                delay(100);
-              }
-      } 
-*/
+  // Auswertung des Topics und der empfangenen Nachricht
+  if (String(topic) == "Werktor/K0") {
+    if (message == "AN") {
+      Serial.println("Gerät einschalten");
+      // Füge hier deinen Code zum Einschalten eines Geräts ein, z.B.:
+      // digitalWrite(LED_BUILTIN, LOW);  // LED einschalten (LOW bei aktiver LOW-Logik)
+    } 
+    else if (message == "AUS") {
+      Serial.println("Gerät ausschalten");
+      // Füge hier deinen Code zum Ausschalten eines Geräts ein, z.B.:
+      // digitalWrite(LED_BUILTIN, HIGH);  // LED ausschalten
+    } 
+    else {
+      Serial.println("Unbekannter Befehl");
+    }
+  } else {
+    Serial.println("Unbekanntes Topic");
+  }
 
 }
 
