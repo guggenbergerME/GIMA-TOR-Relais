@@ -52,7 +52,8 @@ IPAddress mqtt_server(10, 110, 255, 250);  // IP-Adresse des MQTT Brokers im lok
 EthernetClient ethClient;
 PubSubClient client(ethClient);
 
-//************************************************************************** mqtt Server
+//************************************************************************** Variablen
+int topic_init = 0; // Topic Variable zum einmaligen aufrufen
 
 
 //************************************************************************** Funktionsprototypen
@@ -60,6 +61,8 @@ void loop                       ();
 void setup                      ();
 void reconnect                  ();
 void callback(char* topic, byte* payload, unsigned int length);
+void topic_mqtt_init            ();
+void mqtt_reconnect_intervall   ();
 
 
 //************************************************************************** Intervalle
@@ -71,8 +74,9 @@ unsigned long interval_BEISPIEL = 800;
       previousMillis_BEISPIEL = millis(); 
       FUNKTION();
     }  
-
 */
+unsigned long previousMillis_mqtt_reconnect = 0; // 
+unsigned long interval_mqtt_reconnect = 50; 
 
 
 //************************************************************************** SETUP
@@ -111,6 +115,28 @@ pcf8574.digitalWrite(P7, !LOW);
 
 }
 
+//************************************************************************** Topic MQTT init
+void topic_mqtt_init(){
+/*
+Durch das init der Topic wird einmalig dem System gezeigt welche Topic es gibt
+Benötigte Variable
+- int topic_init = 0;
+*/
+    if (topic_init==0)
+  {
+    topic_init = 1;
+    // Topic init
+    client.publish("Werktor/K0", "online");
+    client.publish("Werktor/K1", "online");
+    client.publish("Werktor/K2", "online");
+    client.publish("Werktor/K3", "online");
+    client.publish("Werktor/K4", "online");
+    client.publish("Werktor/K5", "online");
+    client.publish("Werktor/K6", "online");
+    client.publish("Werktor/K7", "online");
+  }
+}
+
 //************************************************************************** mqtt - reconnect
 void reconnect() {
   while (!client.connected()) {
@@ -118,6 +144,13 @@ void reconnect() {
     if (client.connect("WerktorClient", "hitesh", "RO9UZ7wANCXzmy")) {
       Serial.println("verbunden");
       client.subscribe("Werktor/K0");
+      client.subscribe("Werktor/K1");
+      client.subscribe("Werktor/K2");
+      client.subscribe("Werktor/K3");
+      client.subscribe("Werktor/K4");
+      client.subscribe("Werktor/K5");
+      client.subscribe("Werktor/K6");
+      client.subscribe("Werktor/K7");
     } else {
       Serial.print("Fehler, rc=");
       Serial.print(client.state());
@@ -142,37 +175,123 @@ void callback(char* topic, byte* payload, unsigned int length) {
   
   Serial.println(message);
 
-  // Auswertung des Topics und der empfangenen Nachricht
+  // -------------------------------------------------------- Topic Auswerten K0
   if (String(topic) == "Werktor/K0") {
-    if (message == "AN") {
-      Serial.println("Gerät einschalten");
-      // Füge hier deinen Code zum Einschalten eines Geräts ein, z.B.:
-      // digitalWrite(LED_BUILTIN, LOW);  // LED einschalten (LOW bei aktiver LOW-Logik)
+    if (message == "on") {
+        Serial.println("Relais K0 -> AN");
+        pcf8574.digitalWrite(P0, !HIGH);
     } 
-    else if (message == "AUS") {
-      Serial.println("Gerät ausschalten");
-      // Füge hier deinen Code zum Ausschalten eines Geräts ein, z.B.:
-      // digitalWrite(LED_BUILTIN, HIGH);  // LED ausschalten
+    else if (message == "off") {
+        Serial.println("Relais K0 -> AUS");
+        pcf8574.digitalWrite(P0, !LOW);
     } 
-    else {
-      Serial.println("Unbekannter Befehl");
-    }
-  } else {
-    Serial.println("Unbekanntes Topic");
-  }
+    else { }} else { }
 
+// -------------------------------------------------------- Topic Auswerten K1
+  if (String(topic) == "Werktor/K1") {
+    if (message == "on") {
+        Serial.println("Relais K1 -> AN");
+        pcf8574.digitalWrite(P1, !HIGH);
+    } 
+    else if (message == "off") {
+        Serial.println("Relais K1 -> AUS");
+        pcf8574.digitalWrite(P1, !LOW);
+    } 
+    else { }} else { }
+
+// -------------------------------------------------------- Topic Auswerten K2
+  if (String(topic) == "Werktor/K2") {
+    if (message == "on") {
+        Serial.println("Relais K2 -> AN");
+        pcf8574.digitalWrite(P2, !HIGH);
+    } 
+    else if (message == "off") {
+        Serial.println("Relais K2 -> AUS");
+        pcf8574.digitalWrite(P2, !LOW);
+    } 
+    else { }} else { }
+
+// -------------------------------------------------------- Topic Auswerten K3
+  if (String(topic) == "Werktor/K3") {
+    if (message == "on") {
+        Serial.println("Relais K3 -> AN");
+        pcf8574.digitalWrite(P3, !HIGH);
+    } 
+    else if (message == "off") {
+        Serial.println("Relais K3 -> AUS");
+        pcf8574.digitalWrite(P3, !LOW);
+    } 
+    else { }} else { }
+
+// -------------------------------------------------------- Topic Auswerten K4
+  if (String(topic) == "Werktor/K4") {
+    if (message == "on") {
+        Serial.println("Relais K4 -> AN");
+        pcf8574.digitalWrite(P4, !HIGH);
+    } 
+    else if (message == "off") {
+        Serial.println("Relais K4 -> AUS");
+        pcf8574.digitalWrite(P4, !LOW);
+    } 
+    else {  }} else {  }
+
+
+// -------------------------------------------------------- Topic Auswerten K5
+  if (String(topic) == "Werktor/K5") {
+    if (message == "on") {
+        Serial.println("Relais K5 -> AN");
+        pcf8574.digitalWrite(P5, !HIGH);
+    } 
+    else if (message == "off") {
+        Serial.println("Relais K5 -> AUS");
+        pcf8574.digitalWrite(P5, !LOW);
+    } 
+    else { }} else { }
+
+// -------------------------------------------------------- Topic Auswerten K6
+  if (String(topic) == "Werktor/K6") {
+    if (message == "on") {
+        Serial.println("Relais K6 -> AN");
+        pcf8574.digitalWrite(P6, !HIGH);
+    } 
+    else if (message == "off") {
+        Serial.println("Relais K6 -> AUS");
+        pcf8574.digitalWrite(P6, !LOW);
+    } 
+    else { }} else { }
+
+// -------------------------------------------------------- Topic Auswerten K7
+  if (String(topic) == "Werktor/K7") {
+    if (message == "on") {
+        Serial.println("Relais K7 -> AN");
+        pcf8574.digitalWrite(P7, !HIGH);
+    } 
+    else if (message == "off") {
+        Serial.println("Relais K7 -> AUS");
+        pcf8574.digitalWrite(P7, !LOW);
+    } 
+    else { }} else { }
+
+
+}
+//************************************************************************** mqtt_reconnect_intervall 
+void mqtt_reconnect_intervall() {
+    if (!client.connected()) {
+      reconnect();
+    }
+    client.loop();
 }
 
 //************************************************************************** LOOP
 void loop() {
 
-  if (!client.connected()) {
-    reconnect();
-  }
-  client.loop();
-/*
- // Senden einer Beispielnachricht an ein bestimmtes Thema
-  client.publish("Werktor/K0", "Hallo von Arduino!");
-  delay(5000);  // Nachricht alle 10 Sekunden senden
-*/
+    if (millis() - previousMillis_mqtt_reconnect > interval_mqtt_reconnect) {
+      previousMillis_mqtt_reconnect = millis(); 
+      mqtt_reconnect_intervall();
+    }  
+
+
+// Mqtt Topic einmalig beim Start INIT
+topic_mqtt_init();
+
 }
