@@ -43,8 +43,9 @@ PCF8574 pcf8574(0x20);
 
 //************************************************************************** LAN Network definieren 
 byte mac[] = { 0xDE, 0xAD, 0xBE, 0xEF, 0x00, 0x01 };
-IPAddress ip(10, 110, 1, 12); //comment this line if you are using DHCP
-IPAddress subnet(255, 255, 0, 0); // Subnet Mask
+IPAddress ip(10, 110, 0, 5); //comment this line if you are using DHCP
+
+//IPAddress subnet(255, 255, 0, 0); // Subnet Mask
 
 IPAddress mqtt_server(10, 110, 255, 250);  // IP-Adresse des MQTT Brokers im lokalen Netzwerk
 
@@ -114,9 +115,9 @@ pcf8574.digitalWrite(P7, !LOW);
 void reconnect() {
   while (!client.connected()) {
     Serial.print("Verbindung zum MQTT-Server aufbauen...");
-    if (client.connect("arduinoClient", "hitesh", "RO9UZ7wANCXzmy")) {
+    if (client.connect("WerktorClient", "hitesh", "RO9UZ7wANCXzmy")) {
       Serial.println("verbunden");
-      client.subscribe("test/topic");
+      client.subscribe("Werktor/K0");
     } else {
       Serial.print("Fehler, rc=");
       Serial.print(client.state());
@@ -128,6 +129,7 @@ void reconnect() {
 
 //************************************************************************** mqtt - callback
 void callback(char* topic, byte* payload, unsigned int length) {
+
   Serial.print("Nachricht angekommen [");
   Serial.print(topic);
   Serial.print("] ");
@@ -135,6 +137,26 @@ void callback(char* topic, byte* payload, unsigned int length) {
     Serial.print((char)payload[i]);
   }
   Serial.println();
+/*
+    if (strcmp(topic,"Werktor/K0")==0) {
+
+        // Kanal A
+        if ((char)payload[0] == 'o' && (char)payload[1] == 'n') {  
+                 Serial.println("Relais K0 -> AN");
+                 pcf8574.digitalWrite(P0, !HIGH);
+                 //client.publish("Werktor/K0","on");
+                delay(100);
+              }
+
+        if ((char)payload[0] == 'o' && (char)payload[1] == 'f' && (char)payload[2] == 'f') {  
+                 Serial.println("Relais K0 -> AUS");
+                 pcf8574.digitalWrite(P0, !LOW);
+                 //client.publish("Werktor/K0","off");
+                delay(100);
+              }
+      } 
+*/
+
 }
 
 //************************************************************************** LOOP
@@ -144,7 +166,9 @@ void loop() {
     reconnect();
   }
   client.loop();
-
-delay(200);
-
+/*
+ // Senden einer Beispielnachricht an ein bestimmtes Thema
+  client.publish("Werktor/K0", "Hallo von Arduino!");
+  delay(5000);  // Nachricht alle 10 Sekunden senden
+*/
 }
