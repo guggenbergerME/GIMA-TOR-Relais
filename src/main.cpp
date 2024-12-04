@@ -47,13 +47,16 @@ IPAddress ip(10, 110, 0, 5); //comment this line if you are using DHCP
 
 //IPAddress subnet(255, 255, 0, 0); // Subnet Mask
 
-IPAddress mqtt_server(10, 110, 255, 250);  // IP-Adresse des MQTT Brokers im lokalen Netzwerk
+IPAddress mqtt_server(10, 110, 0, 3);  // IP-Adresse des MQTT Brokers im lokalen Netzwerk
 
 EthernetClient ethClient;
 PubSubClient client(ethClient);
 
 //************************************************************************** Variablen
 int topic_init = 0; // Topic Variable zum einmaligen aufrufen
+
+int status_tor_auf = 0;
+int status_tor_zu = 0;
 
 
 //************************************************************************** Funktionsprototypen
@@ -76,8 +79,15 @@ unsigned long interval_BEISPIEL = 800;
     }  
 */
 unsigned long previousMillis_mqtt_reconnect = 0; // 
-unsigned long interval_mqtt_reconnect = 50; 
+unsigned long interval_mqtt_reconnect = 200; 
 
+// Relais Abfallverzögerung
+unsigned long previousMillis_Tor_Auf;
+unsigned long previousMillis_Tor_Zu;
+
+// Wie lange sollen die Relais halten
+unsigned long dauer_relais_Tor_auf = 2000;
+unsigned long dauer_relais_Tor_zu = 2000;
 
 //************************************************************************** SETUP
 void setup() {
@@ -129,11 +139,11 @@ Benötigte Variable
     client.publish("Werktor/K0", "online");
     client.publish("Werktor/K1", "online");
     client.publish("Werktor/K2", "online");
-    client.publish("Werktor/K3", "online");
-    client.publish("Werktor/K4", "online");
-    client.publish("Werktor/K5", "online");
-    client.publish("Werktor/K6", "online");
-    client.publish("Werktor/K7", "online");
+    //client.publish("Werktor/K3", "online");
+    //client.publish("Werktor/K4", "online");
+    //client.publish("Werktor/K5", "online");
+    //client.publish("Werktor/K6", "online");
+    //client.publish("Werktor/K7", "online");
   }
 }
 
@@ -146,11 +156,11 @@ void reconnect() {
       client.subscribe("Werktor/K0");
       client.subscribe("Werktor/K1");
       client.subscribe("Werktor/K2");
-      client.subscribe("Werktor/K3");
-      client.subscribe("Werktor/K4");
-      client.subscribe("Werktor/K5");
-      client.subscribe("Werktor/K6");
-      client.subscribe("Werktor/K7");
+      //client.subscribe("Werktor/K3");
+      //client.subscribe("Werktor/K4");
+      //client.subscribe("Werktor/K5");
+      //client.subscribe("Werktor/K6");
+      //client.subscribe("Werktor/K7");
     } else {
       Serial.print("Fehler, rc=");
       Serial.print(client.state());
@@ -177,25 +187,32 @@ void callback(char* topic, byte* payload, unsigned int length) {
 
   // -------------------------------------------------------- Topic Auswerten K0
   if (String(topic) == "Werktor/K0") {
-    if (message == "on") {
-        Serial.println("Relais K0 -> AN");
+    if (message == "auf") {
+        Serial.println("Relais K0 -> Tor AUF Impuls");
         pcf8574.digitalWrite(P0, !HIGH);
+        status_tor_auf = 1;
+        // Bei aktivierung millis speichern
+        previousMillis_Tor_Auf = millis();
     } 
-    else if (message == "off") {
-        Serial.println("Relais K0 -> AUS");
+    else if (message == "zu") {
+        Serial.println("Relais K0 -> Tor AUF Relais abschalten");
         pcf8574.digitalWrite(P0, !LOW);
+        status_tor_auf = 0;
     } 
     else { }} else { }
 
 // -------------------------------------------------------- Topic Auswerten K1
   if (String(topic) == "Werktor/K1") {
-    if (message == "on") {
-        Serial.println("Relais K1 -> AN");
+    if (message == "zu") {
+        Serial.println("Relais K1 -> Tor ZU Impuls");
         pcf8574.digitalWrite(P1, !HIGH);
+        status_tor_zu = 1;
+        // Bei aktivierung millis speichern
+        previousMillis_Tor_Zu = millis();        
     } 
-    else if (message == "off") {
-        Serial.println("Relais K1 -> AUS");
-        pcf8574.digitalWrite(P1, !LOW);
+    else if (message == "zu") {
+        //Serial.println("Relais K1 -> Tor ZU Relais abschalten");
+        //pcf8574.digitalWrite(P1, !LOW);
     } 
     else { }} else { }
 
@@ -206,11 +223,11 @@ void callback(char* topic, byte* payload, unsigned int length) {
         pcf8574.digitalWrite(P2, !HIGH);
     } 
     else if (message == "off") {
-        Serial.println("Relais K2 -> AUS");
-        pcf8574.digitalWrite(P2, !LOW);
+        //Serial.println("Relais K2 -> AUS");
+        //pcf8574.digitalWrite(P2, !LOW);
     } 
     else { }} else { }
-
+/*
 // -------------------------------------------------------- Topic Auswerten K3
   if (String(topic) == "Werktor/K3") {
     if (message == "on") {
@@ -271,7 +288,7 @@ void callback(char* topic, byte* payload, unsigned int length) {
         pcf8574.digitalWrite(P7, !LOW);
     } 
     else { }} else { }
-
+*/
 
 }
 //************************************************************************** mqtt_reconnect_intervall 
@@ -285,12 +302,37 @@ void mqtt_reconnect_intervall() {
 //************************************************************************** LOOP
 void loop() {
 
+// MQTT Abfrage
     if (millis() - previousMillis_mqtt_reconnect > interval_mqtt_reconnect) {
       previousMillis_mqtt_reconnect = millis(); 
       mqtt_reconnect_intervall();
     }  
 
+// Relais Ausschaltverzögerung - Tor AUF
+if (millis() - previousMillis_Tor_Auf > dauer_relais_Tor_auf && status_tor_auf == 1)  
+  {
+        pcf8574.digitalWrite(P0, !LOW);
+        Serial.println("P0 - AUS");
+        status_tor_auf = 0;
+  } 
+// Relais Ausschaltverzögerung - Tor ZU
+if (millis() - previousMillis_Tor_Zu > dauer_relais_Tor_zu && status_tor_zu == 1)  
+  {
+        pcf8574.digitalWrite(P1, !LOW);
+        Serial.println("P1 - AUS");
+        status_tor_zu = 0;
+  }   
 
+
+
+/*
+        delay(1000);
+        pcf8574.digitalWrite(P0, !LOW);
+        Serial.println("P0 - AUS");
+        status_tor_auf = 0;
+  */    
+
+    
 // Mqtt Topic einmalig beim Start INIT
 topic_mqtt_init();
 
