@@ -221,14 +221,14 @@ void callback(char* topic, byte* payload, unsigned int length) {
 
 // -------------------------------------------------------- Topic Auswerten K2
   if (String(topic) == "Werktor/K2") {
-    if (message == "on") {
+    if (message == "toggleAUF") {
         Serial.println("Toogle Impuls Stromstossrelais");
         pcf8574.digitalWrite(P2, !HIGH);
         status_tor_toggle = 1;
         // Bei aktivierung millis speichern
         previousMillis_Tor_toggle = millis();           
     } 
-    else if (message == "off") {
+    else if (message == "toggleZU") {
         Serial.println("Toogle Impuls Stromstossrelais");
         pcf8574.digitalWrite(P2, !LOW);
     } 
