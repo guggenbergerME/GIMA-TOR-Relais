@@ -57,6 +57,7 @@ int topic_init = 0; // Topic Variable zum einmaligen aufrufen
 
 int status_tor_auf = 0;
 int status_tor_zu = 0;
+int status_tor_toggle = 0;
 
 
 //************************************************************************** Funktionsprototypen
@@ -84,10 +85,12 @@ unsigned long interval_mqtt_reconnect = 200;
 // Relais Abfallverzögerung
 unsigned long previousMillis_Tor_Auf;
 unsigned long previousMillis_Tor_Zu;
+unsigned long previousMillis_Tor_toggle; // Schalten des Stromstoss Relais für Tag Öffnung
 
 // Wie lange sollen die Relais halten
-unsigned long dauer_relais_Tor_auf = 2000;
-unsigned long dauer_relais_Tor_zu = 2000;
+unsigned long dauer_relais_Tor_auf = 1000;
+unsigned long dauer_relais_Tor_zu = 1000;
+unsigned long dauer_relais_Tor_toggle = 1000;
 
 //************************************************************************** SETUP
 void setup() {
@@ -219,12 +222,15 @@ void callback(char* topic, byte* payload, unsigned int length) {
 // -------------------------------------------------------- Topic Auswerten K2
   if (String(topic) == "Werktor/K2") {
     if (message == "on") {
-        Serial.println("Relais K2 -> AN");
+        Serial.println("Toogle Impuls Stromstossrelais");
         pcf8574.digitalWrite(P2, !HIGH);
+        status_tor_toggle = 1;
+        // Bei aktivierung millis speichern
+        previousMillis_Tor_toggle = millis();           
     } 
     else if (message == "off") {
-        //Serial.println("Relais K2 -> AUS");
-        //pcf8574.digitalWrite(P2, !LOW);
+        Serial.println("Toogle Impuls Stromstossrelais");
+        pcf8574.digitalWrite(P2, !LOW);
     } 
     else { }} else { }
 /*
@@ -312,16 +318,24 @@ void loop() {
 if (millis() - previousMillis_Tor_Auf > dauer_relais_Tor_auf && status_tor_auf == 1)  
   {
         pcf8574.digitalWrite(P0, !LOW);
-        Serial.println("P0 - AUS");
+        Serial.println("P0/K0 - AUS");
         status_tor_auf = 0;
   } 
 // Relais Ausschaltverzögerung - Tor ZU
 if (millis() - previousMillis_Tor_Zu > dauer_relais_Tor_zu && status_tor_zu == 1)  
   {
         pcf8574.digitalWrite(P1, !LOW);
-        Serial.println("P1 - AUS");
+        Serial.println("P1/K1 - AUS");
         status_tor_zu = 0;
   }   
+
+// Relais Toggle - Schaltung Pförtner für dauer auf
+if (millis() - previousMillis_Tor_toggle > dauer_relais_Tor_toggle && status_tor_toggle == 1)  
+  {
+        pcf8574.digitalWrite(P2, !LOW);
+        Serial.println("P2/K2 - AUS");
+        status_tor_toggle = 0;
+  }  
 
 
 
