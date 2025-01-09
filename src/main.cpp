@@ -67,6 +67,7 @@ void reconnect                  ();
 void callback(char* topic, byte* payload, unsigned int length);
 void topic_mqtt_init            ();
 void mqtt_reconnect_intervall   ();
+void(* resetFunc) (void) = 0;
 
 
 //************************************************************************** Intervalle
@@ -349,5 +350,8 @@ if (millis() - previousMillis_Tor_toggle > dauer_relais_Tor_toggle && status_tor
     
 // Mqtt Topic einmalig beim Start INIT
 topic_mqtt_init();
+
+//++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++ Arduino Reset
+if ( millis()  >= 780000) resetFunc(); // Reset alle 13 Min
 
 }
